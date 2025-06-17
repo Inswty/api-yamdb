@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from .permissions import IsAdmin
 from .serializers import SignUpSerializer, TokenSerializer, UserSerializer
-from .utils import check_confirmation_code
+from .confirmations import check_confirmation_code
 
 User = get_user_model()
 

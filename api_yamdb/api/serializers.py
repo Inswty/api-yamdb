@@ -1,11 +1,11 @@
-import re
-
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 
-from .utils import check_confirmation_code, send_confirmation_code
+from .confirmations import check_confirmation_code, send_confirmation_code
+from .validators import (
+    validate_user_exists, validate_username_format, validate_name_length
+)
 
 User = get_user_model()
 
@@ -20,39 +20,19 @@ class SignUpSerializer(serializers.ModelSerializer):
         fields = ('email', 'username')
 
     def validate_username(self, value):
-        """Проверяет, что username не 'me' и соответствует формату."""
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Использовать имя "me" в качестве username запрещено'
-            )
-        if not re.match(r'^[\w.@+-]+\Z', value):
-            raise serializers.ValidationError(
-                'Имя пользователя может содержать только буквы, '
-                'цифры и символы @/./+/-/_'
-            )
-        return value
+        """Проверяет формат username и запрещенные значения."""
+        return validate_username_format(value)
 
     def validate(self, data):
         """Проверяет существование пользователя и уникальность полей."""
         username = data.get('username')
         email = data.get('email')
         
-        # Проверяем существующую пару username-email.
-        user = User.objects.filter(username=username).first()
+        user = validate_user_exists(username, email)
         if user:
-            if user.email == email:
-                send_confirmation_code(user)
-                self.instance = user
-                return data
-            else:
-                raise serializers.ValidationError(
-                    'Пользователь с таким username уже существует'
-                )
-        else:
-            if User.objects.filter(email=email).exists():
-                raise serializers.ValidationError(
-                    'Пользователь с таким email уже существует'
-                )
+            send_confirmation_code(user)
+            self.instance = user
+            return data
             
         return data
 
@@ -81,7 +61,13 @@ class TokenSerializer(serializers.Serializer):
         username = data.get('username')
         confirmation_code = data.get('confirmation_code')
         
-        user = User.objects.get(username=username)
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                'Пользователь с таким username не найден'
+            )
+            
         if not check_confirmation_code(user, confirmation_code):
             raise serializers.ValidationError(
                 'Неверный код подтверждения'
@@ -92,14 +78,8 @@ class TokenSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для работы с пользователями."""
-    username = serializers.CharField(
-        max_length=150,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )
-    email = serializers.EmailField(
-        max_length=254,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )
+    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField(max_length=254)
     first_name = serializers.CharField(max_length=150, required=False)
     last_name = serializers.CharField(max_length=150, required=False)
 
@@ -111,56 +91,28 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def validate_username(self, value):
-        """Проверяет, что username не 'me'."""
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Использовать имя "me" в качестве username запрещено'
-            )
-        if not re.match(r'^[\w.@+-]+\Z', value):
-            raise serializers.ValidationError(
-                'Имя пользователя может содержать только буквы, '
-                'цифры и символы @/./+/-/_'
-            )
-        return value
-
-    def validate_email(self, value):
-        """Проверяет, что email не 'me'."""
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Использовать имя "me" в качестве email запрещено'
-            )
-        return value
+        """Проверяет формат username и запрещенные значения."""
+        return validate_username_format(value)
 
     def validate(self, data):
-        """Проверяем существование пользователя."""
+        """Проверяет существование пользователя и уникальность полей."""
         username = data.get('username')
         email = data.get('email')
-        user = User.objects.filter(username=username).first()
+        
+        user = validate_user_exists(username, email)
         if user:
-            if user.email != email:
-                raise serializers.ValidationError(
-                    'Пользователь с таким username уже существует с другим email'
-                )
             self.instance = user
+            
         return data
 
     def create(self, validated_data):
-        """Создаем пользователя."""
-        user = User.objects.create_user(**validated_data)
-        return user
+        """Создает нового пользователя."""
+        return User.objects.create_user(**validated_data)
 
     def validate_first_name(self, value):
         """Проверяет, что длина имени не превышает 150 символов."""
-        if len(value) > 150:
-            raise serializers.ValidationError(
-                'Длина имени не должна превышать 150 символов'
-            )
-        return value
+        return validate_name_length(value, 'имени')
 
     def validate_last_name(self, value):
         """Проверяет, что длина фамилии не превышает 150 символов."""
-        if len(value) > 150:
-            raise serializers.ValidationError(
-                'Длина фамилии не должна превышать 150 символов'
-            )
-        return value 
+        return validate_name_length(value, 'фамилии') 
