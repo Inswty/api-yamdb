@@ -95,7 +95,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(request.user)
         if request.method == 'PATCH':
             data = request.data.copy()
-            data.pop('role', None)  # Удаляем поле role, если оно есть.
+            data.pop('role', None)  # Удаляем поле role, если есть.
             serializer = self.get_serializer(
                 request.user,
                 data=data,

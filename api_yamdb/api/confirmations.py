@@ -26,11 +26,12 @@ def send_confirmation_code(user):
     os.makedirs(email_dir, exist_ok=True)
     file_path = os.path.join(email_dir, 'confirmation_codes.txt')
     with open(file_path, 'a') as f:
-        f.write(f'User: {user.username}, Email: {user.email}, Code: {confirmation_code}\n')
+        f.write(f'User: {user.username},
+                Email: {user.email}, Code: {confirmation_code}\n')
 
     return confirmation_code
 
 
 def check_confirmation_code(user, confirmation_code):
     """Проверяет код подтверждения."""
-    return default_token_generator.check_token(user, confirmation_code) 
+    return default_token_generator.check_token(user, confirmation_code)

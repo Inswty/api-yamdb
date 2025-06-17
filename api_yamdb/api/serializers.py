@@ -3,9 +3,9 @@ from django.utils.crypto import get_random_string
 from rest_framework import serializers
 
 from .confirmations import check_confirmation_code, send_confirmation_code
-from .validators import (
-    validate_user_exists, validate_username_format, validate_name_length
-)
+from .validators import (validate_name_length,
+                         validate_user_exists,
+                         validate_username_format)
 
 User = get_user_model()
 
