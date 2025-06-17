@@ -1,16 +1,19 @@
+from datetime import datetime
+
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.contrib.auth import get_user_model
 
 MAX_STR_LENGTH = 20
 MAX_CHAR_LENGTH = 256
+MAX_SLUG_LENGTH = 50
 
 User = get_user_model()
 
 
 class Category(models.Model):
     name = models.CharField('Категория', max_length=MAX_CHAR_LENGTH)
-    slug = models.SlugField('Слаг', unique=True)
+    slug = models.SlugField('Слаг', unique=True, max_length=MAX_SLUG_LENGTH)
 
     class Meta():
         verbose_name = 'категория'
@@ -23,7 +26,7 @@ class Category(models.Model):
 
 class Genre(models.Model):
     name = models.CharField('Жанр', max_length=MAX_CHAR_LENGTH)
-    slug = models.SlugField('Слаг', unique=True)
+    slug = models.SlugField('Слаг', unique=True, max_length=MAX_SLUG_LENGTH)
 
     class Meta():
         verbose_name = 'жанр'
@@ -36,20 +39,25 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField('Название', max_length=MAX_CHAR_LENGTH)
+    year = models.IntegerField(
+        'Год выпуска',
+        validators=[MaxValueValidator(datetime.now().year)]
+    )
+    rating = models.IntegerField(
+        'Рейтинг', null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
+    description = models.TextField('Описание', blank=True, null=True)
+    genre = models.ManyToManyField(
+        Genre, related_name='titles',
+        verbose_name='Жанры'
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='titles',
         verbose_name='Категория'
-    )
-    genres = models.ManyToManyField(
-        Genre, related_name='titles',
-        verbose_name='Жанры'
-    )
-    rating = models.IntegerField(
-        'Рейтинг', null=True, blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
 
     class Meta():
@@ -79,7 +87,7 @@ class Review(models.Model):
     class Meta:
         verbose_name = 'отзыв'
         verbose_name_plural = 'Отзывы'
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
         constraints = [
             models.UniqueConstraint(
                 fields=['author', 'title'],
