@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,6 +25,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'reviews.apps.ReviewsConfig',
+    'api',
 ]
 
 MIDDLEWARE = [
@@ -105,7 +107,22 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
+AUTH_USER_MODEL = 'api.User'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
