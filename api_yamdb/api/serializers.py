@@ -1,8 +1,9 @@
+import re
+
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-import re
 
 from .utils import check_confirmation_code, send_confirmation_code
 
@@ -26,7 +27,8 @@ class SignUpSerializer(serializers.ModelSerializer):
             )
         if not re.match(r'^[\w.@+-]+\Z', value):
             raise serializers.ValidationError(
-                'Имя пользователя может содержать только буквы, цифры и символы @/./+/-/_'
+                'Имя пользователя может содержать только буквы, '
+                'цифры и символы @/./+/-/_'
             )
         return value
 
@@ -34,29 +36,28 @@ class SignUpSerializer(serializers.ModelSerializer):
         """Проверяет существование пользователя и уникальность полей."""
         username = data.get('username')
         email = data.get('email')
-        try:
-            user = User.objects.get(username=username, email=email)
-            # Если пользователь существует, отправляем новый код
-            send_confirmation_code(user)
-            # Сохраняем пользователя как instance, чтобы не создавать нового
-            self.instance = user
-            return data
-        except User.DoesNotExist:
-            # Если пользователь не существует, проверяем уникальность полей
-            if User.objects.filter(username=username).exists():
+        
+        # Проверяем существующую пару username-email.
+        user = User.objects.filter(username=username).first()
+        if user:
+            if user.email == email:
+                send_confirmation_code(user)
+                self.instance = user
+                return data
+            else:
                 raise serializers.ValidationError(
-                    'Пользователь с таким username уже существует.'
+                    'Пользователь с таким username уже существует'
                 )
+        else:
             if User.objects.filter(email=email).exists():
                 raise serializers.ValidationError(
-                    'Пользователь с таким email уже существует.'
+                    'Пользователь с таким email уже существует'
                 )
-            return data
+            
+        return data
 
     def create(self, validated_data):
         """Создает нового пользователя и отправляет код подтверждения."""
-        if self.instance is not None:
-            return self.instance
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
@@ -64,6 +65,10 @@ class SignUpSerializer(serializers.ModelSerializer):
         )
         send_confirmation_code(user)
         return user
+
+    def update(self, instance, validated_data):
+        """Обновляет существующего пользователя."""
+        return instance
 
 
 class TokenSerializer(serializers.Serializer):
@@ -113,7 +118,8 @@ class UserSerializer(serializers.ModelSerializer):
             )
         if not re.match(r'^[\w.@+-]+\Z', value):
             raise serializers.ValidationError(
-                'Имя пользователя может содержать только буквы, цифры и символы @/./+/-/_'
+                'Имя пользователя может содержать только буквы, '
+                'цифры и символы @/./+/-/_'
             )
         return value
 
@@ -129,15 +135,12 @@ class UserSerializer(serializers.ModelSerializer):
         """Проверяем существование пользователя."""
         username = data.get('username')
         email = data.get('email')
-        
-        # Проверяем существование пользователя
         user = User.objects.filter(username=username).first()
         if user:
             if user.email != email:
                 raise serializers.ValidationError(
-                    'Пользователь с таким username уже существует'
+                    'Пользователь с таким username уже существует с другим email'
                 )
-            # Если email совпадает, не выдаём ошибку
             self.instance = user
         return data
 

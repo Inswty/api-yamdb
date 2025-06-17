@@ -2,21 +2,21 @@ from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
 from .permissions import IsAdmin
-from .serializers import UserSerializer, SignUpSerializer, TokenSerializer
+from .serializers import SignUpSerializer, TokenSerializer, UserSerializer
 from .utils import check_confirmation_code
 
 User = get_user_model()
 
 
 class SignUpView(APIView):
-    """View для регистрации пользователя."""
+    """Регистрация нового пользователя."""
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -33,10 +33,10 @@ class TokenView(APIView):
     def post(self, request):
         username = request.data.get('username')
         if not username:
-            # Если username не передан, пусть сериализатор обработает ошибку.
             serializer = TokenSerializer(data=request.data)
             if not serializer.is_valid():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
         else:
             try:
                 user = User.objects.get(username=username)
@@ -47,9 +47,13 @@ class TokenView(APIView):
                 )
         serializer = TokenSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        user = User.objects.get(username=serializer.validated_data['username'])
-        if not check_confirmation_code(user, serializer.validated_data['confirmation_code']):
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+        user = User.objects.get(
+            username=serializer.validated_data['username'])
+        if not check_confirmation_code(
+            user, serializer.validated_data['confirmation_code']
+        ):
             return Response(
                 {'detail': 'Неверный код подтверждения'},
                 status=status.HTTP_400_BAD_REQUEST
