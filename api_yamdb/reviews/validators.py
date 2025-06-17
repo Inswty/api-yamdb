@@ -43,4 +43,4 @@ def validate_name_length(value, field_name):
         raise serializers.ValidationError(
             f'Длина {field_name} не должна превышать 150 символов'
         )
-    return value 
+    return value

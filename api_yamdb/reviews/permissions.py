@@ -3,7 +3,7 @@ from rest_framework import permissions
 
 class IsAdmin(permissions.BasePermission):
     """Разрешение для проверки роли администратора."""
-    
+
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated

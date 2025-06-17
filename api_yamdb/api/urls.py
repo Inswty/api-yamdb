@@ -3,8 +3,9 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     CategoryViewSet, CommentViewSet, GenreViewSet,
-    TitleViewSet, ReviewViewSet, SignUpView, TokenView, UserViewSet
+    TitleViewSet, ReviewViewSet
 )
+from reviews.views import SignUpView, TokenView, UserViewSet
 
 v1_router = DefaultRouter()
 v1_router.register('users', UserViewSet, basename='v1-users')

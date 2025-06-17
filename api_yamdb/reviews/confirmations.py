@@ -1,13 +1,12 @@
 import os
 
-from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 
 
 def send_confirmation_code(user):
     """Отправляет код подтверждения пользователю.
-    
+
     Код выводится в консоль и сохраняется в файл.
     """
     confirmation_code = default_token_generator.make_token(user)
@@ -26,8 +25,8 @@ def send_confirmation_code(user):
     os.makedirs(email_dir, exist_ok=True)
     file_path = os.path.join(email_dir, 'confirmation_codes.txt')
     with open(file_path, 'a') as f:
-        f.write(f'User: {user.username},
-                Email: {user.email}, Code: {confirmation_code}\n')
+        f.write(f'User: {user.username},'
+                'Email: {user.email}, Code: {confirmation_code}\n')
 
     return confirmation_code
 
