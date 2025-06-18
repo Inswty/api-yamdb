@@ -64,7 +64,8 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        slug_field='username', read_only=True
+        slug_field='username',
+        read_only=True
     )
     title = serializers.SlugRelatedField(
         slug_field='id',
@@ -74,6 +75,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Review
+        read_only_fields = ('author', 'title', 'pub_date')
 
     def validate(self, data):
         if self.context['request'].method == 'POST':
@@ -87,15 +89,19 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field='username', read_only=True)
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
     review = serializers.SlugRelatedField(
         slug_field='id',
         read_only=True
     )
 
     class Meta:
-        fields = '__all__'
         model = Comment
+        fields = '__all__'
+        read_only_fields = ('author', 'review', 'pub_date')
 
 
 class SignUpSerializer(serializers.ModelSerializer):
