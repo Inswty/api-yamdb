@@ -40,6 +40,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         Title.objects.select_related('category').prefetch_related('genre')
     )
     serializer_class = TitleSerializer
+    http_method_names = ('get', 'post', 'patch', 'delete')
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     ordering_fields = ('name', 'year', 'rating')
