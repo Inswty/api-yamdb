@@ -5,6 +5,8 @@ from rest_framework import serializers
 
 User = get_user_model()
 
+MAX_NAME_LENGTH = 150
+
 
 def validate_username_format(value):
     """Проверяет формат username и запрещенные значения."""
@@ -38,9 +40,9 @@ def validate_user_exists(username, email):
 
 
 def validate_name_length(value, field_name):
-    """Проверяет, что длина имени/фамилии не превышает 150 символов."""
-    if len(value) > 150:
+    """Проверяет, что длина имени/фамилии не превышает допустимое значение."""
+    if len(value) > MAX_NAME_LENGTH:
         raise serializers.ValidationError(
-            f'Длина {field_name} не должна превышать 150 символов'
+            f'Длина {field_name} не должна превышать {MAX_NAME_LENGTH} символов'
         )
     return value
