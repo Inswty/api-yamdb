@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -131,17 +130,20 @@ class Title(models.Model):
 class Review(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE,
-        related_name='reviews'
+        related_name='reviews',
+        verbose_name='автор'
     )
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE,
-        related_name='reviews'
+        related_name='reviews',
+        verbose_name='произведение'
     )
     text = models.TextField('Текст отзыва')
     score = models.IntegerField(
+        'оценка',
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
-    pub_date = models.DateTimeField(auto_now_add=True)
+    pub_date = models.DateTimeField('дата публикации', auto_now_add=True)
 
     class Meta:
         verbose_name = 'отзыв'
@@ -149,10 +151,22 @@ class Review(models.Model):
         ordering = ('-pub_date',)
         constraints = [
             models.UniqueConstraint(
-                fields=['author', 'title'],
+                fields=('author', 'title'),
                 name='unique_review'
             )
         ]
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.update_title_rating()
+
+    def update_title_rating(self):
+        rating = (
+            Review.objects.filter(title=self.title)
+            .aggregate(models.Avg('score'))('score__avg',)
+        )
+        self.title.rating = rating
+        self.title.save()
 
     def __str__(self):
         return self.text[:MAX_STR_LENGTH]
