@@ -4,8 +4,6 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework import serializers
 
-User = get_user_model()
-
 MAX_NAME_LENGTH = 150
 
 
@@ -25,6 +23,7 @@ def validate_username_format(value):
 
 def validate_user_exists(username, email):
     """Проверяет существование пользователя и уникальность полей."""
+    User = get_user_model()
     user = User.objects.filter(username=username).first()
     if user:
         if user.email != email:
