@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 
 from .confirmations import check_confirmation_code
 from .permissions import (
-    IsAdmin, IsAdminOrReadOnly, IsAuthenticatedOrReadOnly, 
+    IsAdmin, IsAdminOrReadOnly, IsAuthenticatedOrReadOnly,
     IsAuthorModeratorAdminOrReadOnly
 )
 from .serializers import (
@@ -61,7 +61,10 @@ class CategoryViewSet(mixins.CreateModelMixin,
     permission_classes = (IsAdminOrReadOnly,)
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(mixins.CreateModelMixin,
+                   mixins.DestroyModelMixin,
+                   mixins.ListModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     lookup_field = 'slug'
@@ -73,10 +76,14 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     http_method_names = ('get', 'post', 'patch', 'delete')
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorModeratorAdminOrReadOnly)
+    permission_classes = (IsAuthenticatedOrReadOnly,
+                          IsAuthorModeratorAdminOrReadOnly)
+
+    def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
+        return Review.objects.filter(title_id=title_id)
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
@@ -87,16 +94,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     http_method_names = ('get', 'post', 'patch', 'delete')
-    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorModeratorAdminOrReadOnly)
-
-    def get_queryset(self):
-        review_id = self.kwargs.get('review_id')
-        return Comment.objects.filter(review_id=review_id)
-    
-    def perform_create(self, serializer):
-        review_id = self.kwargs.get('review_id')
-        review = get_object_or_404(Review, id=review_id)
-        serializer.save(author=self.request.user, review=review)
+    permission_classes = (IsAuthenticatedOrReadOnly,
+                          IsAuthorModeratorAdminOrReadOnly)
 
     def get_queryset(self):
         review_id = self.kwargs.get('review_id')

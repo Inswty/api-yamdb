@@ -1,11 +1,10 @@
 from datetime import datetime
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator
 from django.db import models
 
-MAX_STR_LENGTH = 20
-MAX_CHAR_LENGTH = 256
-MAX_SLUG_LENGTH = 50
+from .constants import MAX_STR_LENGTH, MAX_CHAR_LENGTH, MAX_SLUG_LENGTH
+from .validators import get_score_validators
 
 
 class User(AbstractUser):
@@ -103,7 +102,7 @@ class Title(models.Model):
     )
     rating = models.IntegerField(
         'Рейтинг', null=True, blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        validators=get_score_validators()
     )
     description = models.TextField('Описание', blank=True, null=True)
     genre = models.ManyToManyField(
@@ -141,7 +140,7 @@ class Review(models.Model):
     text = models.TextField('Текст отзыва')
     score = models.IntegerField(
         'оценка',
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        validators=get_score_validators()
     )
     pub_date = models.DateTimeField('дата публикации', auto_now_add=True)
 

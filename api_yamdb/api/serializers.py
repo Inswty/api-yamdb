@@ -1,11 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
 
 from .confirmations import check_confirmation_code, send_confirmation_code
 from reviews.models import Category, Comment, Genre, Title, Review
-
 from reviews.validators import (validate_name_length,
                                 validate_user_exists,
                                 validate_username_format)
