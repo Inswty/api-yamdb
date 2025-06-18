@@ -1,4 +1,3 @@
-
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import (
     DjangoFilterBackend, FilterSet, CharFilter
@@ -13,7 +12,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 
 from .confirmations import check_confirmation_code
-from .permissions import IsAdmin
+from .permissions import (
+    IsAdmin, IsAdminOrReadOnly, IsAuthenticatedOrReadOnly, 
+    IsAuthorModeratorAdminOrReadOnly
+)
 from .serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
     TitleSerializer, SignUpSerializer, TokenSerializer, UserSerializer
@@ -41,6 +43,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     ordering_fields = ('name', 'year', 'rating')
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -51,6 +54,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filterset_fields = ('name',)
     search_fields = ('name',)
     ordering_fields = ('name',)
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -61,12 +65,14 @@ class GenreViewSet(viewsets.ModelViewSet):
     filterset_fields = ('name',)
     search_fields = ('name',)
     ordering_fields = ('name',)
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     http_method_names = ('get', 'post', 'patch', 'delete')
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorModeratorAdminOrReadOnly)
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
@@ -77,6 +83,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorModeratorAdminOrReadOnly)
 
 
 class SignUpView(APIView):
