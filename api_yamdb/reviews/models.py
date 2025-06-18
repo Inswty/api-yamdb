@@ -163,7 +163,7 @@ class Review(models.Model):
     def update_title_rating(self):
         rating = (
             Review.objects.filter(title=self.title)
-            .aggregate(models.Avg('score'))('score__avg',)
+            .aggregate(models.Avg('score'))['score__avg']
         )
         self.title.rating = rating
         self.title.save()
@@ -189,7 +189,7 @@ class Comment(models.Model):
     class Meta():
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
         default_related_name = 'comments'
 
     def __str__(self):

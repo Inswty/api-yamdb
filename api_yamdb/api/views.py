@@ -4,7 +4,7 @@ from django_filters.rest_framework import (
     DjangoFilterBackend, FilterSet, CharFilter
 )
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets, filters
+from rest_framework import mixins, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -43,7 +43,10 @@ class TitleViewSet(viewsets.ModelViewSet):
     ordering_fields = ('name', 'year', 'rating')
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin,
+                      mixins.ListModelMixin,
+                      viewsets.GenericViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     lookup_field = 'slug'
@@ -75,8 +78,16 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        review_id = self.kwargs.get('review_id')
+        return Comment.objects.filter(review_id=review_id)
+
+    def perform_create(self, serializer):
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, id=review_id)
+        serializer.save(author=self.request.user, review=review)
 
 
 class SignUpView(APIView):
