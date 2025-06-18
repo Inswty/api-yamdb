@@ -90,8 +90,7 @@ class CommentSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True)
     review = serializers.SlugRelatedField(
         slug_field='id',
-        queryset=Review.objects.all(),
-        write_only=True
+        read_only=True
     )
 
     class Meta:

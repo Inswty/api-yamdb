@@ -163,7 +163,7 @@ class Review(models.Model):
     def update_title_rating(self):
         rating = (
             Review.objects.filter(title=self.title)
-            .aggregate(models.Avg('score'))('score__avg',)
+            .aggregate(models.Avg('score'))['score__avg']
         )
         self.title.rating = rating
         self.title.save()
