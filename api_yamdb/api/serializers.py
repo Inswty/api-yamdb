@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 from rest_framework import serializers
@@ -35,12 +37,12 @@ class TitleSerializer(serializers.ModelSerializer):
         many=True,
         slug_field='slug',
         queryset=Genre.objects.all(),
-        required=False
+        required=True
     )
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),
-        required=False
+        required=True
     )
     # Для чтения
     genre_read = GenreSerializer(source='genre', many=True, read_only=True)
@@ -53,6 +55,20 @@ class TitleSerializer(serializers.ModelSerializer):
             'genre', 'category',          # Для записи
             'genre_read', 'category_read'    # При чтении
         ]
+
+    def validate(self, data):
+        if 'year' in data and data['year'] > datetime.now().year:
+            raise serializers.ValidationError({
+                'year': 'Год не может быть больше текущего.'
+            })
+        return data
+
+    def validate_genre(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                'Нужно указать хотя бы один жанр'
+            )
+        return value
 
     def to_representation(self, instance):
         """Переименовываем поля для ответа"""
@@ -176,8 +192,12 @@ class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для работы с пользователями."""
     username = serializers.CharField(max_length=MAX_USERNAME_LENGTH)
     email = serializers.EmailField(max_length=MAX_EMAIL_LENGTH)
-    first_name = serializers.CharField(max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False)
-    last_name = serializers.CharField(max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False)
+    first_name = serializers.CharField(
+        max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False
+    )
+    last_name = serializers.CharField(
+        max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False
+    )
 
     class Meta:
         model = User
