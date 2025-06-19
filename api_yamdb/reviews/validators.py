@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework import serializers
 
-MAX_NAME_LENGTH = 150
+from .constants import MAX_FIRST_LAST_NAME_LENGTH, MIN_SCORE, MAX_SCORE
 
 
 def validate_username_format(value):
@@ -41,13 +41,13 @@ def validate_user_exists(username, email):
 
 def validate_name_length(value, field_name):
     """Проверяет, что длина имени/фамилии не превышает допустимое значение."""
-    if len(value) > MAX_NAME_LENGTH:
+    if len(value) > MAX_FIRST_LAST_NAME_LENGTH:
         raise serializers.ValidationError(
             f'Длина {field_name} не должна превышать'
-            ' {MAX_NAME_LENGTH} символов'
+            ' {MAX_FIRST_LAST_NAME_LENGTH} символов'
         )
     return value
 
 
 def get_score_validators():
-    return [MinValueValidator(1), MaxValueValidator(10)]
+    return [MinValueValidator(MIN_SCORE), MaxValueValidator(MAX_SCORE)]

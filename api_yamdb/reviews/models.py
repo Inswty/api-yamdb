@@ -3,7 +3,10 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator
 from django.db import models
 
-from .constants import MAX_STR_LENGTH, MAX_CHAR_LENGTH, MAX_SLUG_LENGTH
+from .constants import (
+    MAX_STR_LENGTH, MAX_CHAR_LENGTH, MAX_SLUG_LENGTH,
+    MAX_USERNAME_LENGTH, MAX_EMAIL_LENGTH, MAX_FIRST_LAST_NAME_LENGTH
+)
 from .validators import get_score_validators
 
 
@@ -18,7 +21,7 @@ class User(AbstractUser):
 
     username = models.CharField(
         'Имя пользователя',
-        max_length=150,
+        max_length=MAX_USERNAME_LENGTH,
         unique=True,
         help_text=(
             'Обязательное поле. Не более 150 символов. '
@@ -28,16 +31,16 @@ class User(AbstractUser):
     email = models.EmailField(
         'Email',
         unique=True,
-        max_length=254,
+        max_length=MAX_EMAIL_LENGTH,
     )
     first_name = models.CharField(
         'Имя',
-        max_length=150,
+        max_length=MAX_FIRST_LAST_NAME_LENGTH,
         blank=True
     )
     last_name = models.CharField(
         'Фамилия',
-        max_length=150,
+        max_length=MAX_FIRST_LAST_NAME_LENGTH,
         blank=True
     )
     bio = models.TextField(
@@ -46,7 +49,7 @@ class User(AbstractUser):
     )
     role = models.CharField(
         'Роль',
-        max_length=20,
+        max_length=MAX_STR_LENGTH,
         choices=Role.choices,
         default=Role.USER
     )

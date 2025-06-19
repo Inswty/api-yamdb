@@ -4,6 +4,10 @@ from rest_framework import serializers
 
 from .confirmations import check_confirmation_code, send_confirmation_code
 from reviews.models import Category, Comment, Genre, Title, Review
+from reviews.constants import (
+    MAX_USERNAME_LENGTH, MAX_EMAIL_LENGTH, MAX_FIRST_LAST_NAME_LENGTH,
+    PASSWORD_LENGTH
+)
 from reviews.validators import (validate_name_length,
                                 validate_user_exists,
                                 validate_username_format)
@@ -104,8 +108,8 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class SignUpSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователей."""
-    email = serializers.EmailField(max_length=254)
-    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField(max_length=MAX_EMAIL_LENGTH)
+    username = serializers.CharField(max_length=MAX_USERNAME_LENGTH)
 
     class Meta:
         model = User
@@ -133,7 +137,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
-            password=get_random_string(length=12)
+            password=get_random_string(length=PASSWORD_LENGTH)
         )
         send_confirmation_code(user)
         return user
@@ -170,10 +174,10 @@ class TokenSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для работы с пользователями."""
-    username = serializers.CharField(max_length=150)
-    email = serializers.EmailField(max_length=254)
-    first_name = serializers.CharField(max_length=150, required=False)
-    last_name = serializers.CharField(max_length=150, required=False)
+    username = serializers.CharField(max_length=MAX_USERNAME_LENGTH)
+    email = serializers.EmailField(max_length=MAX_EMAIL_LENGTH)
+    first_name = serializers.CharField(max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False)
+    last_name = serializers.CharField(max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False)
 
     class Meta:
         model = User

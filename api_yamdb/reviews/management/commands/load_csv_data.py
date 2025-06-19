@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from reviews.models import Category, Genre, Title, Review, Comment
+from reviews.constants import MIN_SCORE, MAX_SCORE
 
 User = get_user_model()
 
@@ -258,7 +259,9 @@ class Command(BaseCommand):
                 title = title_map.get(title_info)
                 author = user_map.get(username)
                 
-                if not (title and author and 1 <= review_data['score'] <= 10):
+                if not (title and author and (
+                    MIN_SCORE <= review_data['score'] <= MAX_SCORE)
+                ):
                     skipped_count += 1
                     continue
                 
