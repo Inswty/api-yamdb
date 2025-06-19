@@ -38,6 +38,7 @@ class TitleFilter(FilterSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = (
         Title.objects.select_related('category').prefetch_related('genre')
+        .order_by('id')
     )
     serializer_class = TitleSerializer
     http_method_names = ('get', 'post', 'patch', 'delete')
