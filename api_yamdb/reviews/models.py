@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator
 from django.db import models
@@ -79,6 +80,7 @@ class Category(models.Model):
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
         default_related_name = 'titles'
+        ordering = ('id',)
 
     def __str__(self):
         return self.name[:MAX_STR_LENGTH]
@@ -92,6 +94,7 @@ class Genre(models.Model):
         verbose_name = 'жанр'
         verbose_name_plural = 'Жанры'
         default_related_name = 'titles'
+        ordering = ('id',)
 
     def __str__(self):
         return self.name[:MAX_STR_LENGTH]
@@ -124,6 +127,7 @@ class Title(models.Model):
         verbose_name = 'произведение'
         verbose_name_plural = 'Произведения'
         default_related_name = 'titles'
+        ordering = ('id',)
 
     def __str__(self):
         return self.name[:MAX_STR_LENGTH]

@@ -1,7 +1,5 @@
 from django.contrib.auth import get_user_model
-from django_filters.rest_framework import (
-    DjangoFilterBackend, FilterSet, CharFilter
-)
+from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status, viewsets, filters
 from rest_framework.decorators import action
@@ -20,19 +18,10 @@ from .serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
     TitleSerializer, SignUpSerializer, TokenSerializer, UserSerializer
 )
-from reviews.models import Category, Comment, Genre, Title, Review, User
+from api.filters import TitleFilter
+from reviews.models import Category, Genre, Title, Review, User
 
 User = get_user_model()
-
-
-class TitleFilter(FilterSet):
-    """Кастомный фильтр для модели Title."""
-    genre = CharFilter(field_name='genre__slug', lookup_expr='exact')
-    category = CharFilter(field_name='category__slug', lookup_expr='exact')
-
-    class Meta:
-        model = Title
-        fields = ('genre', 'category', 'name', 'year')
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -83,8 +72,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
                           IsAuthorModeratorAdminOrReadOnly)
 
     def get_queryset(self):
-        title_id = self.kwargs.get('title_id')
-        return Review.objects.filter(title_id=title_id)
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
@@ -98,13 +87,24 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,
                           IsAuthorModeratorAdminOrReadOnly)
 
-    def get_queryset(self):
+    def get_review(self):
+        """Получаем отзыв с проверкой существования произведения."""
+        title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
-        return Comment.objects.filter(review_id=review_id)
+        # Проверяем существование произведения
+        title = get_object_or_404(Title, id=title_id)
+        # Проверяем существование отзыва для этого произведения
+        review = get_object_or_404(Review, id=review_id, title=title)
+        return review
+
+    def get_queryset(self):
+        """Получаем комментарии для отзыва."""
+        review = self.get_review()
+        return review.comments.all().order_by('-pub_date')
 
     def perform_create(self, serializer):
-        review_id = self.kwargs.get('review_id')
-        review = get_object_or_404(Review, id=review_id)
+        """Создаем комментарий с проверкой."""
+        review = self.get_review()
         serializer.save(author=self.request.user, review=review)
 
 
@@ -159,7 +159,7 @@ class TokenView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с пользователями."""
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
     lookup_field = 'username'
     filter_backends = [SearchFilter]
