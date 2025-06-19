@@ -23,8 +23,8 @@ def validate_username_format(value):
 
 def validate_user_exists(username, email):
     """Проверяет существование пользователя и уникальность полей."""
-    User = get_user_model()
-    user = User.objects.filter(username=username).first()
+    user_model = get_user_model()
+    user = user_model.objects.filter(username=username).first()
     if user:
         if user.email != email:
             raise serializers.ValidationError(
@@ -32,7 +32,7 @@ def validate_user_exists(username, email):
             )
         return user
     else:
-        if User.objects.filter(email=email).exists():
+        if user_model.objects.filter(email=email).exists():
             raise serializers.ValidationError(
                 'Пользователь с таким email уже существует'
             )

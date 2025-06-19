@@ -5,11 +5,11 @@ from django.utils.crypto import get_random_string
 from rest_framework import serializers
 
 from .confirmations import check_confirmation_code, send_confirmation_code
-from reviews.models import Category, Comment, Genre, Title, Review
 from reviews.constants import (
     MAX_USERNAME_LENGTH, MAX_EMAIL_LENGTH, MAX_FIRST_LAST_NAME_LENGTH,
     PASSWORD_LENGTH
 )
+from reviews.models import Category, Comment, Genre, Title, Review
 from reviews.validators import (validate_name_length,
                                 validate_user_exists,
                                 validate_username_format)
