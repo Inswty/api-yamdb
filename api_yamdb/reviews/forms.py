@@ -7,7 +7,7 @@ from .validators import validate_user_exists, validate_username_format
 
 class CustomUserCreationForm(UserCreationForm):
     """Форма для создания пользователей в админке."""
-    
+
     class Meta(UserCreationForm.Meta):
         model = User
         fields = ('username', 'email', 'role')
@@ -24,9 +24,9 @@ class CustomUserCreationForm(UserCreationForm):
         cleaned_data = super().clean()
         username = cleaned_data.get('username')
         email = cleaned_data.get('email')
-        
+
         if username and email:
             existing_user = validate_user_exists(username, email)
             if existing_user and not self.instance.pk:
-                raise ValidationError("Пользователь уже существует")
+                raise ValidationError('Пользователь уже существует')
         return cleaned_data
