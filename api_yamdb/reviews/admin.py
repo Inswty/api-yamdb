@@ -1,6 +1,41 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
-from .models import Category, Comment, Genre, Title, Review
+from .models import Category, Comment, Genre, Title, Review, User
+from .forms import CustomUserCreationForm
+
+
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    add_form = CustomUserCreationForm
+    
+    list_display = (
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+        'role',
+        'is_staff',
+    )
+    list_filter = ('role', 'is_staff', 'is_superuser')
+    search_fields = ('username', 'email', 'first_name', 'last_name')
+    ordering = ('username',)
+    
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'role'),
+        }),
+    )
+    
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Персональная информация', {'fields': ('first_name', 'last_name', 'email', 'bio')}),
+        ('Права доступа', {
+            'fields': ('role', 'is_active', 'is_staff', 'is_superuser'),
+        }),
+        ('Важные даты', {'fields': ('last_login', 'date_joined')}),
+    )
 
 
 @admin.register(Category)
