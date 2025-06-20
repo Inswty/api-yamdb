@@ -42,6 +42,8 @@ class CategoryAdmin(admin.ModelAdmin):
         'name',
         'slug',
     )
+    list_filter = ('name',)
+    search_fields = ('name',)
 
 
 @admin.register(Genre)
@@ -50,6 +52,8 @@ class GenreAdmin(admin.ModelAdmin):
         'name',
         'slug',
     )
+    list_filter = ('name',)
+    search_fields = ('name',)
 
 
 @admin.register(Title)
@@ -60,6 +64,8 @@ class TitleAdmin(admin.ModelAdmin):
         'description',
         'category',
     )
+    list_filter = ('name',)
+    search_fields = ('name',)
 
 
 @admin.register(Review)
@@ -71,6 +77,8 @@ class ReviewAdmin(admin.ModelAdmin):
         'score',
         'pub_date',
     )
+    list_filter = ('author',)
+    search_fields = ('author',)
 
 
 @admin.register(Comment)
@@ -81,3 +89,5 @@ class CommentAdmin(admin.ModelAdmin):
         'text',
         'pub_date',
     )
+    list_filter = ('author',)
+    search_fields = ('author',)
