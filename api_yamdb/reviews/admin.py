@@ -2,10 +2,13 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from .models import Category, Comment, Genre, Title, Review, User
+from .forms import CustomUserCreationForm
 
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
+    add_form = CustomUserCreationForm
+    
     list_display = (
         'username',
         'email',
