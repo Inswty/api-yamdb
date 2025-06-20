@@ -106,10 +106,6 @@ class Title(models.Model):
         'Год выпуска',
         validators=[MaxValueValidator(datetime.now().year)]
     )
-    rating = models.IntegerField(
-        'Рейтинг', null=True, blank=True,
-        validators=get_score_validators()
-    )
     description = models.TextField('Описание', blank=True, null=True)
     genre = models.ManyToManyField(
         Genre, related_name='titles',
@@ -161,18 +157,6 @@ class Review(models.Model):
                 name='unique_review'
             )
         ]
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.update_title_rating()
-
-    def update_title_rating(self):
-        rating = (
-            Review.objects.filter(title=self.title)
-            .aggregate(models.Avg('score'))['score__avg']
-        )
-        self.title.rating = rating
-        self.title.save()
 
     def __str__(self):
         return self.text[:MAX_STR_LENGTH]

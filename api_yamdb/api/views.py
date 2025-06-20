@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status, viewsets, filters
@@ -26,7 +27,10 @@ User = get_user_model()
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = (
-        Title.objects.select_related('category').prefetch_related('genre')
+        Title.objects
+        .annotate(rating=Avg('reviews__score'))
+        .select_related('category')
+        .prefetch_related('genre')
         .order_by('id')
     )
     serializer_class = TitleSerializer

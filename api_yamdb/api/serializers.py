@@ -32,6 +32,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    rating = serializers.FloatField(read_only=True)
     # Для записи
     genre = serializers.SlugRelatedField(
         many=True,
