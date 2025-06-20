@@ -29,4 +29,4 @@ class CustomUserCreationForm(UserCreationForm):
             existing_user = validate_user_exists(username, email)
             if existing_user and not self.instance.pk:
                 raise ValidationError("Пользователь уже существует")
-        return cleaned_data 
+        return cleaned_data
