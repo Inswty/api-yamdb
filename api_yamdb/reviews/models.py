@@ -8,7 +8,7 @@ from .constants import (
     MAX_STR_LENGTH, MAX_CHAR_LENGTH, MAX_SLUG_LENGTH,
     MAX_USERNAME_LENGTH, MAX_EMAIL_LENGTH, MAX_FIRST_LAST_NAME_LENGTH
 )
-from .validators import get_score_validators
+from .validators import get_score_validators, validate_username_format
 
 
 class User(AbstractUser):
@@ -24,6 +24,7 @@ class User(AbstractUser):
         'Имя пользователя',
         max_length=MAX_USERNAME_LENGTH,
         unique=True,
+        validators=(validate_username_format,),
         help_text=(
             'Обязательное поле. Не более 150 символов. '
             'Только буквы, цифры и символы @/./+/-/_.'

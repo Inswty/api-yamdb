@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework import serializers
 
@@ -9,14 +10,14 @@ from .constants import MAX_FIRST_LAST_NAME_LENGTH, MIN_SCORE, MAX_SCORE
 
 def validate_username_format(value):
     """Проверяет формат username и запрещенные значения."""
-    if value == 'me':
-        raise serializers.ValidationError(
-            'Использовать имя "me" в качестве username запрещено'
-        )
     if not re.match(r'^[\w.@+-]+\Z', value):
-        raise serializers.ValidationError(
+        raise ValidationError(
             'Имя пользователя может содержать только буквы, '
             'цифры и символы @/./+/-/_'
+        )
+    if value.lower() == 'me':
+        raise ValidationError(
+            'Использовать имя "me" в качестве username запрещено'
         )
     return value
 
@@ -41,6 +42,8 @@ def validate_user_exists(username, email):
 
 def validate_name_length(value, field_name):
     """Проверяет, что длина имени/фамилии не превышает допустимое значение."""
+    if not value:
+        return value
     if len(value) > MAX_FIRST_LAST_NAME_LENGTH:
         raise serializers.ValidationError(
             f'Длина {field_name} не должна превышать'

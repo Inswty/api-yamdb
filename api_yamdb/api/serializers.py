@@ -194,10 +194,12 @@ class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(max_length=MAX_USERNAME_LENGTH)
     email = serializers.EmailField(max_length=MAX_EMAIL_LENGTH)
     first_name = serializers.CharField(
-        max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False
+        max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False,
+        allow_blank=True, allow_null=True, default=None
     )
     last_name = serializers.CharField(
-        max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False
+        max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False,
+        allow_blank=True, allow_null=True, default=None
     )
 
     class Meta:
