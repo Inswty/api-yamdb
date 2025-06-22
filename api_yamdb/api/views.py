@@ -129,7 +129,7 @@ class TokenView(APIView):
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        result = serializer.save()
+        result = serializer.create(serializer.validated_data)
         return Response(result)
 
 
