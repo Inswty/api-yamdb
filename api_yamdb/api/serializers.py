@@ -6,18 +6,11 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
 from .confirmations import send_confirmation_code
+from .mixins import UsernameValidationMixin
 from reviews.constants import PASSWORD_LENGTH
 from reviews.models import Category, Comment, Genre, Title, Review
-from reviews.validators import validate_username_format
 
 User = get_user_model()
-
-
-class UsernameValidationMixin:
-    """Миксин для валидации username."""
-
-    def validate_username(self, username):
-        return validate_username_format(username)
 
 
 class CategorySerializer(serializers.ModelSerializer):
