@@ -14,7 +14,6 @@ from .validators import validate_username_format
 
 def current_year():
     """Функция для получения текущего года"""
-    from datetime import datetime
     return datetime.now().year
 
 

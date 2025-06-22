@@ -13,7 +13,7 @@ def send_confirmation_code(user):
     confirmation_code = default_token_generator.make_token(user)
 
     # Отправляем код через email (сохраняется в mail.outbox).
-    
+
     send_mail(
         'Код подтверждения',
         f'Ваш код подтверждения: {confirmation_code}',
