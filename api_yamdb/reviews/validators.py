@@ -9,11 +9,15 @@ from .constants import MAX_FIRST_LAST_NAME_LENGTH
 
 def validate_username_format(value):
     """Проверяет формат username и запрещенные значения."""
-    if not re.match(r'^[\w.@+-]+\Z', value):
+    # Находим запрещенные символы
+    allowed_pattern = r'[\w.@+-]'
+    forbidden_chars = re.sub(allowed_pattern, '', value)
+
+    if forbidden_chars:
         raise ValidationError(
-            'Имя пользователя может содержать только буквы, '
-            'цифры и символы @/./+/-/_'
+            f'Имя пользователя не должно содержать символы: {forbidden_chars}'
         )
+
     if value.lower() == 'me':
         raise ValidationError(
             'Использовать имя "me" в качестве username запрещено'

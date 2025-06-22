@@ -2,7 +2,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 
 from .models import User
-from .validators import validate_user_exists, validate_username_format
+from .validators import validate_username_format
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -26,7 +26,16 @@ class CustomUserCreationForm(UserCreationForm):
         email = cleaned_data.get('email')
 
         if username and email:
-            existing_user = validate_user_exists(username, email)
-            if existing_user and not self.instance.pk:
-                raise ValidationError('Пользователь уже существует')
+            user = User.objects.filter(username=username).first()
+            if user:
+                if user.email != email:
+                    raise ValidationError(
+                        'Пользователь с таким username уже существует с другим email'
+                    )
+                if not self.instance.pk:
+                    raise ValidationError('Пользователь уже существует')
+            elif User.objects.filter(email=email).exists():
+                raise ValidationError(
+                    'Пользователь с таким email уже существует'
+                )
         return cleaned_data
