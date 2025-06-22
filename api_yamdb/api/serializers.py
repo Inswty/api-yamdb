@@ -3,6 +3,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import AccessToken
 
 from .confirmations import send_confirmation_code
 from reviews.constants import PASSWORD_LENGTH
@@ -177,7 +178,15 @@ class TokenSerializer(serializers.Serializer):
                 'Неверный код подтверждения'
             )
 
+        self.instance = user
         return data
+
+    def create(self, validated_data):
+        """Генерирует JWT токен для пользователя."""
+        user = self.instance
+        refresh = AccessToken.for_user(user)
+
+        return {'token': str(refresh),}
 
 
 class UserSerializer(serializers.ModelSerializer, UsernameValidationMixin):
