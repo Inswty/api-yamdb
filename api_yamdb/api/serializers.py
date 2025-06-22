@@ -1,10 +1,11 @@
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.utils.crypto import get_random_string
 from rest_framework import serializers
 
-from .confirmations import check_confirmation_code, send_confirmation_code
+from .confirmations import send_confirmation_code
 from reviews.constants import (
     MAX_USERNAME_LENGTH, MAX_EMAIL_LENGTH, MAX_FIRST_LAST_NAME_LENGTH,
     PASSWORD_LENGTH
@@ -181,7 +182,7 @@ class TokenSerializer(serializers.Serializer):
                 'Пользователь с таким username не найден'
             )
 
-        if not check_confirmation_code(user, confirmation_code):
+        if not default_token_generator.check_token(user, confirmation_code):
             raise serializers.ValidationError(
                 'Неверный код подтверждения'
             )

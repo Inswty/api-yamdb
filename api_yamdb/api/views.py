@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
@@ -10,7 +11,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 
-from .confirmations import check_confirmation_code
 from .permissions import (
     IsAdmin, IsAdminOrReadOnly, IsAuthenticatedOrReadOnly,
     IsAuthorModeratorAdminOrReadOnly
@@ -148,7 +148,7 @@ class TokenView(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
         user = User.objects.get(
             username=serializer.validated_data['username'])
-        if not check_confirmation_code(
+        if not default_token_generator.check_token(
             user, serializer.validated_data['confirmation_code']
         ):
             return Response(
