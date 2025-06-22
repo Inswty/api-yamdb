@@ -16,6 +16,7 @@ class User(AbstractUser):
 
     class Role(models.TextChoices):
         """Роли пользователей."""
+
         USER = 'user', 'Пользователь'
         MODERATOR = 'moderator', 'Модератор'
         ADMIN = 'admin', 'Администратор'
@@ -51,7 +52,7 @@ class User(AbstractUser):
     )
     role = models.CharField(
         'Роль',
-        max_length=MAX_STR_LENGTH,
+        max_length=max(len(role[0]) for role in Role.choices),
         choices=Role.choices,
         default=Role.USER
     )

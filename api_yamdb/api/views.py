@@ -17,7 +17,7 @@ from .permissions import (
 )
 from .serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
-    TitleSerializer, SignUpSerializer, TokenSerializer, UserSerializer
+    TitleSerializer, SignUpSerializer, TokenSerializer, UserSerializer, UserMeSerializer
 )
 from api.filters import TitleFilter
 from reviews.models import Category, Genre, Title, Review, User
@@ -189,11 +189,11 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def me(self, request):
-        serializer = self.get_serializer(request.user)
+        serializer = UserMeSerializer(request.user)
         if request.method == 'PATCH':
             data = request.data.copy()
             data.pop('role', None)  # Удаляем поле role, если есть.
-            serializer = self.get_serializer(
+            serializer = UserMeSerializer(
                 request.user,
                 data=data,
                 partial=True

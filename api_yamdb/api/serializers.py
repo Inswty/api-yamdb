@@ -2,20 +2,23 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 from rest_framework import serializers
 
 from .confirmations import send_confirmation_code
-from reviews.constants import (
-    MAX_USERNAME_LENGTH, MAX_EMAIL_LENGTH, MAX_FIRST_LAST_NAME_LENGTH,
-    PASSWORD_LENGTH
-)
+from reviews.constants import PASSWORD_LENGTH
 from reviews.models import Category, Comment, Genre, Title, Review
-from reviews.validators import (validate_name_length,
-                                validate_user_exists,
-                                validate_username_format)
+from reviews.validators import validate_username_format
 
 User = get_user_model()
+
+
+class UsernameValidationMixin:
+    """Миксин для валидации username."""
+
+    def validate_username(self, username):
+        return validate_username_format(username)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -124,29 +127,35 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ('author', 'review', 'pub_date')
 
 
-class SignUpSerializer(serializers.ModelSerializer):
+class SignUpSerializer(serializers.Serializer, UsernameValidationMixin):
     """Сериализатор для регистрации пользователей."""
-    email = serializers.EmailField(max_length=MAX_EMAIL_LENGTH)
-    username = serializers.CharField(max_length=MAX_USERNAME_LENGTH)
 
-    class Meta:
-        model = User
-        fields = ('email', 'username')
-
-    def validate_username(self, value):
-        """Проверяет формат username и запрещенные значения."""
-        return validate_username_format(value)
+    email = serializers.EmailField(
+        max_length=User._meta.get_field('email').max_length)
+    username = serializers.CharField(
+        max_length=User._meta.get_field('username').max_length
+    )
 
     def validate(self, data):
         """Проверяет существование пользователя и уникальность полей."""
         username = data.get('username')
         email = data.get('email')
 
-        user = validate_user_exists(username, email)
+        user = User.objects.filter(username=username, email=email).first()
+
+        if User.objects.filter(username=username).exists() and not user:
+            raise serializers.ValidationError(
+                'Пользователь с таким username уже существует с другим email'
+            )
+
+        if User.objects.filter(email=email).exists() and not user:
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует'
+            )
+
         if user:
             send_confirmation_code(user)
             self.instance = user
-            return data
 
         return data
 
@@ -167,6 +176,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class TokenSerializer(serializers.Serializer):
     """Сериализатор для получения токена."""
+
     username = serializers.CharField()
     confirmation_code = serializers.CharField()
 
@@ -175,12 +185,7 @@ class TokenSerializer(serializers.Serializer):
         username = data.get('username')
         confirmation_code = data.get('confirmation_code')
 
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            raise serializers.ValidationError(
-                'Пользователь с таким username не найден'
-            )
+        user = get_object_or_404(User, username=username)
 
         if not default_token_generator.check_token(user, confirmation_code):
             raise serializers.ValidationError(
@@ -190,18 +195,8 @@ class TokenSerializer(serializers.Serializer):
         return data
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer, UsernameValidationMixin):
     """Сериализатор для работы с пользователями."""
-    username = serializers.CharField(max_length=MAX_USERNAME_LENGTH)
-    email = serializers.EmailField(max_length=MAX_EMAIL_LENGTH)
-    first_name = serializers.CharField(
-        max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False,
-        allow_blank=True, allow_null=True, default=None
-    )
-    last_name = serializers.CharField(
-        max_length=MAX_FIRST_LAST_NAME_LENGTH, required=False,
-        allow_blank=True, allow_null=True, default=None
-    )
 
     class Meta:
         model = User
@@ -210,29 +205,8 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name', 'bio', 'role'
         )
 
-    def validate_username(self, value):
-        """Проверяет формат username и запрещенные значения."""
-        return validate_username_format(value)
 
-    def validate(self, data):
-        """Проверяет существование пользователя и уникальность полей."""
-        username = data.get('username')
-        email = data.get('email')
+class UserMeSerializer(UserSerializer):
+    """Сериализатор для работы с собственным профилем пользователя."""
 
-        user = validate_user_exists(username, email)
-        if user:
-            self.instance = user
-
-        return data
-
-    def create(self, validated_data):
-        """Создает нового пользователя."""
-        return User.objects.create_user(**validated_data)
-
-    def validate_first_name(self, value):
-        """Проверяет, что длина имени не превышает 150 символов."""
-        return validate_name_length(value, 'имени')
-
-    def validate_last_name(self, value):
-        """Проверяет, что длина фамилии не превышает 150 символов."""
-        return validate_name_length(value, 'фамилии')
+    role = serializers.CharField(read_only=True)
