@@ -3,6 +3,7 @@ import os
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
+from django.utils import timezone
 
 
 def send_confirmation_code(user):
@@ -26,8 +27,9 @@ def send_confirmation_code(user):
     email_dir = os.path.join(os.path.dirname(__file__), 'email')
     os.makedirs(email_dir, exist_ok=True)
     file_path = os.path.join(email_dir, 'confirmation_codes.txt')
+    current_time = timezone.now().strftime('%Y-%m-%d %H:%M:%S %Z')
     with open(file_path, 'a') as f:
-        f.write(f'User: {user.username},'
-                'Email: {user.email}, Code: {confirmation_code}\n')
+        f.write(f'[{current_time}] User: {user.username}, '
+                f'Email: {user.email}, Code: {confirmation_code}\n')
 
     return confirmation_code
