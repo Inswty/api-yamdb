@@ -63,9 +63,17 @@ class TitleAdmin(admin.ModelAdmin):
         'year',
         'description',
         'category',
+        'display_genres',
     )
-    list_filter = ('name',)
-    search_fields = ('name',)
+    list_filter = ('name', 'genre', 'category')
+    search_fields = ('name', 'year', 'genre__name', 'category__name')
+    filter_horizontal = ('genre',)
+
+    def display_genres(self, obj):
+        """Это вернет список жанров через запятую."""
+        return ", ".join([genre.name for genre in obj.genre.all()])
+
+    display_genres.short_description = 'Жанры'
 
 
 @admin.register(Review)

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 from rest_framework import serializers
@@ -31,9 +29,21 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    rating = serializers.FloatField(read_only=True)
-    # Для записи
+class TitleReadSerializer(serializers.ModelSerializer):
+    rating = serializers.IntegerField(read_only=True)
+    genre = GenreSerializer(many=True, read_only=True)
+    category = CategorySerializer(read_only=True)
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'description', 'rating',
+            'genre', 'category'
+        )
+
+
+class TitleWriteSerializer(serializers.ModelSerializer):
+    rating = serializers.IntegerField(read_only=True)
     genre = serializers.SlugRelatedField(
         many=True,
         slug_field='slug',
@@ -45,24 +55,13 @@ class TitleSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(),
         required=True
     )
-    # Для чтения
-    genre_read = GenreSerializer(source='genre', many=True, read_only=True)
-    category_read = CategorySerializer(source='category', read_only=True)
 
     class Meta:
         model = Title
-        fields = [
+        fields = (
             'id', 'name', 'year', 'description', 'rating',
-            'genre', 'category',          # Для записи
-            'genre_read', 'category_read'    # При чтении
-        ]
-
-    def validate(self, data):
-        if 'year' in data and data['year'] > datetime.now().year:
-            raise serializers.ValidationError({
-                'year': 'Год не может быть больше текущего.'
-            })
-        return data
+            'genre', 'category'
+        )
 
     def validate_genre(self, value):
         if not value:
@@ -72,13 +71,7 @@ class TitleSerializer(serializers.ModelSerializer):
         return value
 
     def to_representation(self, instance):
-        """Переименовываем поля для ответа"""
-        data = super().to_representation(instance)
-        if 'genre_read' in data:
-            data['genre'] = data.pop('genre_read')
-        if 'category_read' in data:
-            data['category'] = data.pop('category_read')
-        return data
+        return TitleReadSerializer(instance, context=self.context).data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -86,13 +79,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='username',
         read_only=True
     )
-    title = serializers.SlugRelatedField(
-        slug_field='id',
-        read_only=True
-    )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')
         model = Review
         read_only_fields = ('author', 'title', 'pub_date')
 
@@ -112,14 +101,10 @@ class CommentSerializer(serializers.ModelSerializer):
         slug_field='username',
         read_only=True
     )
-    review = serializers.SlugRelatedField(
-        slug_field='id',
-        read_only=True
-    )
 
     class Meta:
         model = Comment
-        fields = '__all__'
+        fields = ('id', 'review', 'text', 'author', 'pub_date')
         read_only_fields = ('author', 'review', 'pub_date')
 
 

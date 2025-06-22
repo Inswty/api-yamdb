@@ -1,10 +1,11 @@
 import csv
-import os
 from datetime import datetime
+import os
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
+
 from reviews.constants import MIN_SCORE, MAX_SCORE
 from reviews.models import Category, Genre, Title, Review, Comment
 

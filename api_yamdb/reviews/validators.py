@@ -2,10 +2,9 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework import serializers
 
-from .constants import MAX_FIRST_LAST_NAME_LENGTH, MIN_SCORE, MAX_SCORE
+from .constants import MAX_FIRST_LAST_NAME_LENGTH
 
 
 def validate_username_format(value):
@@ -50,7 +49,3 @@ def validate_name_length(value, field_name):
             ' {MAX_FIRST_LAST_NAME_LENGTH} символов'
         )
     return value
-
-
-def get_score_validators():
-    return [MinValueValidator(MIN_SCORE), MaxValueValidator(MAX_SCORE)]
