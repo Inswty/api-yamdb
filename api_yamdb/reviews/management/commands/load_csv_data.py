@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
     help = 'Загружает данные из CSV файлов в базу данных'
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # noqa: C901
         """Основной метод импорта данных."""
         self.stdout.write(
             self.style.SUCCESS('Начало загрузки данных из CSV...'))
