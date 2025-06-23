@@ -179,7 +179,7 @@ class TokenSerializer(serializers.Serializer):
         user = self.instance
         refresh = AccessToken.for_user(user)
 
-        return {'token': str(refresh),}
+        return {'token': str(refresh)}
 
 
 class UserSerializer(serializers.ModelSerializer, UsernameValidationMixin):
