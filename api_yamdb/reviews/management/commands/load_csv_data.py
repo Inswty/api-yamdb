@@ -1,13 +1,12 @@
 import csv
-from datetime import datetime
 import os
+from datetime import datetime
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from reviews.constants import MIN_SCORE, MAX_SCORE
-from reviews.models import Category, Genre, Title, Review, Comment
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
@@ -17,410 +16,149 @@ class Command(BaseCommand):
 
     help = 'Загружает данные из CSV файлов в базу данных'
 
-    def add_arguments(self, parser):
-        parser.add_argument(
-            '--skip-existing',
-            action='store_true',
-            help='Пропустить существующие записи'
-        )
+    def handle(self, *args, **options):
+        """Основной метод импорта данных."""
+        self.stdout.write(
+            self.style.SUCCESS('Начало загрузки данных из CSV...'))
 
-    def setup_caches(self):
-        """Кэширует все данные из CSV файлов для быстрого доступа."""
-        self.stdout.write('Кэширование данных из CSV файлов...')
+        # Словарь с моделями и именами файлов.
+        models_config = {
+            'category.csv': {
+                'model': Category,
+                'fields': {'name': 'name', 'slug': 'slug'}
+            },
+            'genre.csv': {
+                'model': Genre,
+                'fields': {'name': 'name', 'slug': 'slug'}
+            },
+            'users.csv': {
+                'model': User,
+                'fields': {
+                    'id': 'id',
+                    'username': 'username',
+                    'email': 'email',
+                    'role': 'role',
+                    'bio': 'bio',
+                    'first_name': 'first_name',
+                    'last_name': 'last_name'
+                }
+            },
+            'titles.csv': {
+                'model': Title,
+                'fields': {
+                    'name': 'name',
+                    'year': 'year',
+                    'description': 'description',
+                    'category': 'category'
+                }
+            },
+            'review.csv': {
+                'model': Review,
+                'fields': {
+                    'text': 'text',
+                    'score': 'score',
+                    'pub_date': 'pub_date',
+                    'title_id': 'title',
+                    'author': 'author'
+                }
+            },
+            'comments.csv': {
+                'model': Comment,
+                'fields': {
+                    'id': 'id',
+                    'text': 'text',
+                    'pub_date': 'pub_date',
+                    'review_id': 'review',
+                    'author': 'author'
+                }
+            }
+        }
 
-        # Кэши для CSV файлов с основными сущностями (для поиска связей).
-        self.caches = {}
-        csv_files = ['category.csv', 'titles.csv', 'users.csv', 'review.csv']
-
-        for csv_file in csv_files:
+        # Проходимся циклом по словарю.
+        for filename, config in models_config.items():
             file_path = os.path.join(
-                settings.BASE_DIR, 'static', 'data', csv_file
-            )
+                settings.BASE_DIR, 'static', 'data', filename)
+
             if not os.path.exists(file_path):
                 continue
 
-            cache = {}
-            with open(file_path, encoding='utf-8') as f:
-                reader = csv.DictReader(f)
+            model = config['model']
+            fields_mapping = config['fields']
+
+            # Открываем файл.
+            with open(file_path, encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+
+                # Открываем список объектов которые нужно создать.
+                objects_to_create = []
+
+                # Проходимся циклом по строкам файла.
                 for row in reader:
-                    csv_id = int(row['id'])
-                    if csv_file == 'category.csv':
-                        cache[csv_id] = row['slug'].strip()
-                    elif csv_file == 'titles.csv':
-                        cache[csv_id] = (
-                            row['name'].strip(), int(row['year'])
-                        )
-                    elif csv_file == 'users.csv':
-                        cache[csv_id] = row['username'].strip()
-                    elif csv_file == 'review.csv':
-                        # Кэшируем логический ключ для отзыва.
-                        title_id = int(row['title_id'])
-                        author_id = int(row['author'])
-                        cache[csv_id] = {
-                            'title_id': title_id,
-                            'author_id': author_id,
-                            'text': row['text'].strip(),
-                            'score': int(row['score']),
-                            'pub_date': row['pub_date']
-                        }
-            self.caches[csv_file] = cache
+                    # Создаем словарь с полями.
+                    model_fields = {}
 
-    def load_simple_models(self, csv_file, model_class, field_mapping):
-        """Универсальный метод для загрузки простых моделей."""
-        file_path = os.path.join(
-            settings.BASE_DIR, 'static', 'data', csv_file
-        )
+                    # Проходимся по словарю полученному из строк.
+                    for csv_field, model_field in fields_mapping.items():
+                        if not (csv_field in row and row[csv_field].strip()):
+                            continue
 
-        if not os.path.exists(file_path):
-            self.stdout.write(self.style.ERROR(f'Файл {csv_file} не найден'))
-            return 0
+                        # Проверяем на категорию и автора,
+                        # добавляем их объекты по ключам.
+                        if csv_field == 'category':
+                            category_id = int(row[csv_field])
+                            category = Category.objects.filter(
+                                id=category_id
+                            ).first()
+                            if category:
+                                model_fields[model_field] = category
+                            continue
 
-        objects = []
-        existing_count = 0
+                        if csv_field == 'author':
+                            author_id = int(row[csv_field])
+                            user = User.objects.filter(id=author_id).first()
+                            if user:
+                                model_fields[model_field] = user
+                            continue
 
-        with open(file_path, encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                model_data = {
-                    model_field: row[csv_field].strip()
-                    for csv_field, model_field in field_mapping.items()
-                    if csv_field in row and row[csv_field].strip()
-                }
+                        if csv_field == 'title_id':
+                            title_id = int(row[csv_field])
+                            title = Title.objects.filter(id=title_id).first()
+                            if title:
+                                model_fields[model_field] = title
+                            continue
 
-                if not model_data:
-                    continue
+                        if csv_field == 'review_id':
+                            review_id = int(row[csv_field])
+                            review = Review.objects.filter(
+                                id=review_id
+                            ).first()
+                            if review:
+                                model_fields[model_field] = review
+                            continue
 
-                # Проверяем существование записи по уникальным полям.
-                if model_class == Category or model_class == Genre:
-                    # Для категорий и жанров проверяем по slug.
-                    if model_class.objects.filter(
-                        slug=model_data.get('slug')
-                    ).exists():
-                        existing_count += 1
-                        continue
-                elif model_class == User:
-                    # Для пользователей проверяем по username и email.
-                    if model_class.objects.filter(
-                        username=model_data.get('username'),
-                        email=model_data.get('email')
-                    ).exists():
-                        existing_count += 1
-                        continue
+                        # Иначе добавляем в словарь по ключу,
+                        # значения из CSV строки.
+                        value = row[csv_field].strip()
+                        if model_field == 'id':
+                            value = int(value)
+                        elif model_field == 'year':
+                            value = int(value)
+                        elif model_field == 'score':
+                            value = int(value)
+                        elif model_field in ['pub_date']:
+                            value = datetime.fromisoformat(
+                                value.replace('Z', '+00:00')
+                            )
+                        model_fields[model_field] = value
 
-                objects.append(model_class(**model_data))
+                    # Добавляем в созданный список модель с полями.
+                    if model_fields:
+                        objects_to_create.append(model(**model_fields))
 
-        if objects:
-            created_objects = model_class.objects.bulk_create(
-                objects, ignore_conflicts=True
-            )
-            created = len(created_objects)
-            message = (
-                f'{model_class.__name__}: создано {created}, '
-                f'пропущено {existing_count} записей'
-            )
-            self.stdout.write(self.style.SUCCESS(message))
-            return created
-        return 0
+                # Используем bulk_create для создания
+                # объектов по созданному списку.
+                if objects_to_create:
+                    model.objects.bulk_create(
+                        objects_to_create, ignore_conflicts=True)
 
-    def load_titles(self):
-        """Загружает произведения с использованием кэша категорий."""
-        file_path = os.path.join(
-            settings.BASE_DIR, 'static', 'data', 'titles.csv'
-        )
-        objects = []
-        existing_count = 0
-
-        # Создаем карту slug -> Category.
-        category_map = {cat.slug: cat for cat in Category.objects.all()}
-
-        with open(file_path, encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                name = row['name'].strip()
-                year = int(row['year'])
-
-                # Проверяем существование произведения.
-                if Title.objects.filter(name=name, year=year).exists():
-                    existing_count += 1
-                    continue
-
-                # Получаем категорию через кэш.
-                category = None
-                if row.get('category'):
-                    category_csv_id = int(row['category'])
-                    category_slug = self.caches.get('category.csv', {}).get(
-                        category_csv_id
-                    )
-                    if category_slug:
-                        category = category_map.get(category_slug)
-
-                objects.append(Title(
-                    name=name,
-                    year=year,
-                    category=category,
-                    description=''
-                ))
-
-        if objects:
-            created_objects = Title.objects.bulk_create(
-                objects, ignore_conflicts=True
-            )
-            created = len(created_objects)
-            message = (
-                f'Title: создано {created}, пропущено {existing_count}'
-            )
-            self.stdout.write(self.style.SUCCESS(message))
-            return created
-        return 0
-
-    def load_genre_title_relations(self):
-        """Загружает связи жанр-произведение."""
-        file_path = os.path.join(
-            settings.BASE_DIR, 'static', 'data', 'genre_title.csv'
-        )
-        created = 0
-        existing_count = 0
-
-        # Создаем карты для быстрого поиска.
-        title_map = {title.id: title for title in Title.objects.all()}
-        genre_map = {genre.id: genre for genre in Genre.objects.all()}
-
-        with open(file_path, encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                title_id = int(row['title_id'])
-                genre_id = int(row['genre_id'])
-
-                title = title_map.get(title_id)
-                genre = genre_map.get(genre_id)
-
-                if not (title and genre):
-                    continue
-
-                # Проверяем существование связи.
-                if title.genre.filter(id=genre.id).exists():
-                    existing_count += 1
-                    continue
-
-                title.genre.add(genre)
-                created += 1
-
-        message = (
-            f'Genre-Title: создано {created}, пропущено {existing_count}'
-        )
-        self.stdout.write(self.style.SUCCESS(message))
-        return created
-
-    def load_reviews_and_comments(self):
-        """Универсальный метод для загрузки отзывов и комментариев."""
-        # Создаем карты для быстрого поиска.
-        title_map = {
-            (title.name, title.year): title
-            for title in Title.objects.all()
-        }
-        user_map = {user.username: user for user in User.objects.all()}
-
-        # Загружаем отзывы
-        reviews_created = self._load_reviews(title_map, user_map)
-
-        # Загружаем комментарии
-        comments_created = self._load_comments(title_map, user_map)
-
-        return reviews_created + comments_created
-
-    def _load_reviews(self, title_map, user_map):
-        """Загружает отзывы."""
-        file_path = os.path.join(
-            settings.BASE_DIR, 'static', 'data', 'review.csv'
-        )
-        objects = []
-        existing_count = 0
-        skipped_count = 0
-
-        with open(file_path, encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                review_data = self.caches.get(
-                    'review.csv', {}).get(int(row['id']))
-                if not review_data:
-                    skipped_count += 1
-                    continue
-
-                # Получаем связанные объекты через кэши.
-                title_info = self.caches.get('titles.csv', {}).get(
-                    review_data['title_id']
-                )
-                username = self.caches.get('users.csv', {}).get(
-                    review_data['author_id']
-                )
-
-                if not (title_info and username):
-                    skipped_count += 1
-                    continue
-
-                title = title_map.get(title_info)
-                author = user_map.get(username)
-
-                if not (title and author and (
-                    MIN_SCORE <= review_data['score'] <= MAX_SCORE)
-                ):
-                    skipped_count += 1
-                    continue
-
-                # Проверяем существование отзыва
-                # (уникальное ограничение author+title).
-                if Review.objects.filter(
-                    author=author, title=title
-                ).exists():
-                    existing_count += 1
-                    continue
-
-                pub_date = datetime.fromisoformat(
-                    review_data['pub_date'].replace('Z', '+00:00')
-                )
-
-                objects.append(Review(
-                    title=title,
-                    text=review_data['text'],
-                    author=author,
-                    score=review_data['score'],
-                    pub_date=pub_date
-                ))
-
-        if objects:
-            created_objects = Review.objects.bulk_create(
-                objects, ignore_conflicts=True
-            )
-            created = len(created_objects)
-            message = (
-                f'Review: создано {created}, пропущено {existing_count}, '
-                f'невалидных {skipped_count} записей'
-            )
-            self.stdout.write(self.style.SUCCESS(message))
-            return created
-        return 0
-
-    def _load_comments(self, title_map, user_map):
-        """Загружает комментарии."""
-        file_path = os.path.join(
-            settings.BASE_DIR, 'static', 'data', 'comments.csv'
-        )
-        objects = []
-        existing_count = 0
-        skipped_count = 0
-
-        with open(file_path, encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                review_csv_id = int(row['review_id'])
-                author_csv_id = int(row['author'])
-
-                # Получаем данные отзыва через кэш
-                review_data = self.caches.get(
-                    'review.csv', {}).get(review_csv_id)
-                username = self.caches.get(
-                    'users.csv', {}).get(author_csv_id)
-
-                if not (review_data and username):
-                    skipped_count += 1
-                    continue
-
-                # Получаем данные произведения и автора отзыва.
-                title_info = self.caches.get(
-                    'titles.csv', {}).get(review_data['title_id'])
-                review_author_username = self.caches.get(
-                    'users.csv', {}).get(review_data['author_id'])
-
-                if not (title_info and review_author_username):
-                    skipped_count += 1
-                    continue
-
-                title_name, title_year = title_info
-                author = user_map.get(username)
-
-                if not author:
-                    skipped_count += 1
-                    continue
-
-                # Ищем отзыв в БД по логическому ключу используя Django ORM.
-                review = Review.objects.filter(
-                    title__name=title_name,
-                    title__year=title_year,
-                    author__username=review_author_username
-                ).first()
-
-                if not review:
-                    skipped_count += 1
-                    continue
-
-                # Проверяем существование комментария.
-                if Comment.objects.filter(
-                    review=review,
-                    author=author,
-                    text=row['text'].strip()
-                ).exists():
-                    existing_count += 1
-                    continue
-
-                pub_date = datetime.fromisoformat(
-                    row['pub_date'].replace('Z', '+00:00')
-                )
-
-                objects.append(Comment(
-                    review=review,
-                    text=row['text'].strip(),
-                    author=author,
-                    pub_date=pub_date
-                ))
-
-        if objects:
-            created_objects = Comment.objects.bulk_create(
-                objects, ignore_conflicts=True
-            )
-            created = len(created_objects)
-            message = (
-                f'Comment: создано {created}, пропущено {existing_count}, '
-                f'невалидных {skipped_count} записей'
-            )
-            self.stdout.write(self.style.SUCCESS(message))
-            return created
-        return 0
-
-    def handle(self, *args, **options):
-        """Основной метод выполнения команды."""
-        self.stdout.write(self.style.SUCCESS(
-            'Начало финальной оптимизированной загрузки...'))
-
-        # Кэшируем все данные.
-        self.setup_caches()
-
-        total_created = 0
-
-        # Загружаем данные в правильном порядке.
-        total_created += self.load_simple_models(
-            'category.csv', Category, {'name': 'name', 'slug': 'slug'}
-        )
-
-        total_created += self.load_simple_models(
-            'genre.csv', Genre, {'name': 'name', 'slug': 'slug'}
-        )
-
-        total_created += self.load_simple_models(
-            'users.csv', User, {
-                'username': 'username',
-                'email': 'email',
-                'role': 'role',
-                'bio': 'bio',
-                'first_name': 'first_name',
-                'last_name': 'last_name'
-            }
-        )
-
-        total_created += self.load_titles()
-        total_created += self.load_genre_title_relations()
-        total_created += self.load_reviews_and_comments()
-
-        message = (
-            f'Финальная загрузка завершена! Всего создано: {total_created}'
-        )
-        self.stdout.write(self.style.SUCCESS(message))
+        self.stdout.write(self.style.SUCCESS('Загрузка данных завершена!'))
