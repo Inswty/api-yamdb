@@ -128,7 +128,7 @@ class Title(models.Model):
         return self.name[:MAX_STR_LENGTH]
 
 
-class AuthorTextPub_dateAbstract(models.Model):
+class AuthorTextPubdateAbstract(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -146,7 +146,7 @@ class AuthorTextPub_dateAbstract(models.Model):
         return self.text[:MAX_STR_LENGTH]
 
 
-class Review(AuthorTextPub_dateAbstract):
+class Review(AuthorTextPubdateAbstract):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -166,7 +166,7 @@ class Review(AuthorTextPub_dateAbstract):
         ]
     )
 
-    class Meta(AuthorTextPub_dateAbstract.Meta):
+    class Meta(AuthorTextPubdateAbstract.Meta):
         verbose_name = 'отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = (
@@ -177,13 +177,13 @@ class Review(AuthorTextPub_dateAbstract):
         )
 
 
-class Comment(AuthorTextPub_dateAbstract):
+class Comment(AuthorTextPubdateAbstract):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         verbose_name='отзыв'
     )
 
-    class Meta(AuthorTextPub_dateAbstract.Meta):
+    class Meta(AuthorTextPubdateAbstract.Meta):
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
