@@ -51,7 +51,7 @@ class User(AbstractUser):
     )
     role = models.CharField(
         'Роль',
-        max_length=max(len(role[0]) for role in Role.choices),
+        max_length=max(len(role) for role, _ in Role.choices),
         choices=Role.choices,
         default=Role.USER
     )
@@ -134,7 +134,7 @@ class AuthorTextPub_dateAbstract(models.Model):
         on_delete=models.CASCADE,
         verbose_name='автор'
     )
-    text = models.TextField()
+    text = models.TextField('текст')
     pub_date = models.DateTimeField('дата публикации', auto_now_add=True)
 
     class Meta:
