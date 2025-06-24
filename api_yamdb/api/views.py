@@ -112,6 +112,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class SignUpView(APIView):
     """Регистрация нового пользователя."""
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -128,7 +129,7 @@ class TokenView(APIView):
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        result = serializer.create(serializer.validated_data)
+        result = serializer.save()
         return Response(result)
 
 
