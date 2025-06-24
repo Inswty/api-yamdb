@@ -133,7 +133,6 @@ class SignUpSerializer(serializers.Serializer, UsernameValidationMixin):
             )
 
         if user:
-            send_confirmation_code(user)
             self.instance = user
 
         return data
@@ -150,6 +149,7 @@ class SignUpSerializer(serializers.Serializer, UsernameValidationMixin):
 
     def update(self, instance, validated_data):
         """Обновляет существующего пользователя."""
+        send_confirmation_code(instance)
         return instance
 
 
@@ -171,12 +171,12 @@ class TokenSerializer(serializers.Serializer):
                 'Неверный код подтверждения'
             )
 
-        self.instance = user
         return data
 
     def create(self, validated_data):
         """Генерирует JWT токен для пользователя."""
-        user = self.instance
+        username = validated_data['username']
+        user = get_object_or_404(User, username=username)
         refresh = AccessToken.for_user(user)
 
         return {'token': str(refresh)}
@@ -196,4 +196,5 @@ class UserSerializer(serializers.ModelSerializer, UsernameValidationMixin):
 class UserMeSerializer(UserSerializer):
     """Сериализатор для работы с собственным профилем пользователя."""
 
-    role = serializers.CharField(read_only=True)
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ('role',)
