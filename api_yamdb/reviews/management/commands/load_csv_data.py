@@ -1,6 +1,5 @@
 import csv
 import os
-from datetime import datetime
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -16,7 +15,7 @@ class Command(BaseCommand):
 
     help = 'Загружает данные из CSV файлов в базу данных'
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # noqa: C901
         """Основной метод импорта данных."""
         self.stdout.write(
             self.style.SUCCESS('Начало загрузки данных из CSV...'))
