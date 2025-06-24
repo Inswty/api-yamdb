@@ -5,7 +5,7 @@ from .models import Category, Comment, Genre, Title, Review, User
 
 
 @admin.register(User)
-class ExtendedUserAdmin(BaseUserAdmin):
+class UserAdmin(BaseUserAdmin):
     list_display = (
         'username',
         'email',
