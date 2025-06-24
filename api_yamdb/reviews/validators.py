@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 from django.core.exceptions import ValidationError
 
@@ -19,3 +20,8 @@ def validate_username_format(value):
             'Использовать имя "me" в качестве username запрещено'
         )
     return value
+
+
+def current_year():
+    """Функция для получения текущего года"""
+    return datetime.now().year

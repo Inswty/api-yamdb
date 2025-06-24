@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -9,12 +7,7 @@ from .constants import (
     MAX_USERNAME_LENGTH, MAX_EMAIL_LENGTH, MAX_FIRST_LAST_NAME_LENGTH,
     MIN_SCORE, MAX_SCORE
 )
-from .validators import validate_username_format
-
-
-def current_year():
-    """Функция для получения текущего года"""
-    return datetime.now().year
+from .validators import validate_username_format, current_year
 
 
 class User(AbstractUser):
@@ -80,9 +73,9 @@ class User(AbstractUser):
         return self.role == self.Role.MODERATOR
 
 
-class CategoryGenreAbstract(models.Model):
-    name = models.CharField(max_length=MAX_CHAR_LENGTH)
-    slug = models.SlugField(unique=True, max_length=MAX_SLUG_LENGTH)
+class NameSlugAbstract(models.Model):
+    name = models.CharField('Название', max_length=MAX_CHAR_LENGTH)
+    slug = models.SlugField('Слаг', unique=True, max_length=MAX_SLUG_LENGTH)
 
     class Meta:
         abstract = True
@@ -92,23 +85,23 @@ class CategoryGenreAbstract(models.Model):
         return self.name[:MAX_STR_LENGTH]
 
 
-class Category(CategoryGenreAbstract):
+class Category(NameSlugAbstract):
 
-    class Meta(CategoryGenreAbstract.Meta):
+    class Meta(NameSlugAbstract.Meta):
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
 
 
-class Genre(CategoryGenreAbstract):
+class Genre(NameSlugAbstract):
 
-    class Meta(CategoryGenreAbstract.Meta):
+    class Meta(NameSlugAbstract.Meta):
         verbose_name = 'жанр'
         verbose_name_plural = 'Жанры'
 
 
 class Title(models.Model):
     name = models.CharField('Название', max_length=MAX_CHAR_LENGTH)
-    year = models.PositiveSmallIntegerField(
+    year = models.SmallIntegerField(
         'Год выпуска',
         validators=[MaxValueValidator(current_year)]
     )
@@ -135,7 +128,7 @@ class Title(models.Model):
         return self.name[:MAX_STR_LENGTH]
 
 
-class BaseFeedbackAbstract(models.Model):
+class AuthorTextPub_dateAbstract(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -153,35 +146,44 @@ class BaseFeedbackAbstract(models.Model):
         return self.text[:MAX_STR_LENGTH]
 
 
-class Review(BaseFeedbackAbstract):
+class Review(AuthorTextPub_dateAbstract):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         verbose_name='произведение'
     )
-    score = models.IntegerField(
+    score = models.SmallIntegerField(
         'оценка',
-        validators=[MinValueValidator(MIN_SCORE), MaxValueValidator(MAX_SCORE)]
+        validators=[
+            MinValueValidator(
+                MIN_SCORE,
+                message=f'Оценка не может быть меньше {MIN_SCORE}.'
+            ),
+            MaxValueValidator(
+                MAX_SCORE,
+                message=f'Оценка не может быть больше {MAX_SCORE}.'
+            )
+        ]
     )
 
-    class Meta(BaseFeedbackAbstract.Meta):
+    class Meta(AuthorTextPub_dateAbstract.Meta):
         verbose_name = 'отзыв'
         verbose_name_plural = 'Отзывы'
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=('author', 'title'),
                 name='unique_review'
-            )
-        ]
+            ),
+        )
 
 
-class Comment(BaseFeedbackAbstract):
+class Comment(AuthorTextPub_dateAbstract):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         verbose_name='отзыв'
     )
 
-    class Meta(BaseFeedbackAbstract.Meta):
+    class Meta(AuthorTextPub_dateAbstract.Meta):
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'

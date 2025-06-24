@@ -39,7 +39,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
 
     def get_serializer_class(self):
-        if self.action in ["list", "retrieve"]:
+        if self.action in ('list", "retrieve'):
             return TitleReadSerializer
         return TitleWriteSerializer
 
@@ -101,7 +101,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Получаем комментарии для отзыва."""
-        return self.get_review().comments.all().order_by('-pub_date')
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
         """Создаем комментарий для отзыва."""
