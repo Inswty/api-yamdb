@@ -6,9 +6,9 @@ from django.core.exceptions import ValidationError
 
 def validate_username_format(value):
     """Проверяет формат username и запрещенные значения."""
-    # Находим запрещенные символы
+    # Находим запрещенные символы и убираем повторы.
     allowed_pattern = r'[\w.@+-]'
-    forbidden_chars = re.sub(allowed_pattern, '', value)
+    forbidden_chars = ', '.join(set(re.sub(allowed_pattern, '', value)))
 
     if forbidden_chars:
         raise ValidationError(
