@@ -126,6 +126,7 @@ class SignUpView(APIView):
 
 class TokenView(APIView):
     """View для получения токена."""
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -137,6 +138,7 @@ class TokenView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с пользователями."""
+
     queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
     lookup_field = 'username'
