@@ -31,13 +31,3 @@ class IsAuthorModeratorAdminOrReadOnly(permissions.BasePermission):
             or request.user.is_moderator
             or request.user.is_admin
         )
-
-
-class IsAuthenticatedOrReadOnly(permissions.BasePermission):
-    """Права доступа для аутентифицированных пользователей или чтение."""
-
-    def has_permission(self, request, view):
-        return (
-            request.method in permissions.SAFE_METHODS
-            or request.user.is_authenticated
-        )
