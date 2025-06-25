@@ -103,7 +103,7 @@ class Title(models.Model):
     name = models.CharField('Название', max_length=MAX_CHAR_LENGTH)
     year = models.SmallIntegerField(
         'Год выпуска',
-        validators=[MaxValueValidator(current_year)]
+        validators=(MaxValueValidator(current_year),)
     )
     description = models.TextField('Описание', blank=True, null=True)
     genre = models.ManyToManyField(
@@ -152,7 +152,7 @@ class Review(AuthorTextPubdateAbstract):
         on_delete=models.CASCADE,
         verbose_name='произведение'
     )
-    score = models.SmallIntegerField(
+    score = models.PositiveSmallIntegerField(
         'оценка',
         validators=[
             MinValueValidator(
