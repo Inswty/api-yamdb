@@ -25,6 +25,7 @@ class Command(BaseCommand):
             'genre.csv': Genre,
             'users.csv': User,
             'titles.csv': Title,
+            'genre_title.csv': Title.genre.through,
             'review.csv': Review,
             'comments.csv': Comment
         }
