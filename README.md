@@ -1,94 +1,102 @@
-YaMDb - это API для сбора отзывов пользователей на различные произведения (фильмы, книги, музыку).
+## YaMDb
+API для сбора отзывов пользователей на различные произведения (фильмы, книги, музыку)
 
-Проект состоит из:
-Приложения reviews - основная бизнес-логика
-Приложения api - интерфейс взаимодействия через API
+### Проект состоит из:
+- Приложения reviews - основная бизнес-логика
+- Приложения api - интерфейс взаимодействия через API
 
-Установка и запуск:
-Клонировать репозиторий
-Установить зависимости: 
+### Установка и запуск:
+- Клонировать репозиторий
+- Установить зависимости: 
 ```
 pip install -r requirements.txt
 ```
-Применить миграции:
+- Применить миграции:
 ```
 python manage.py migrate
 ```
-Запустить сервер:
+- Запустить сервер:
 ```
 python manage.py runserver
 ```
-Наполнение базы данных:
+### Наполнение базы данных:
 Для загрузки тестовых данных из CSV-файлов выполнить:
-(bash)
-```
+```bash
 python manage.py load_csv_data
 ```
-API Endpoints:
-Аутентификация
-POST /api/v1/auth/signup/ - Регистрация нового пользовател
-POST /api/v1/auth/token/ - Получение JWT-токена
+## API Endpoints:
+### Аутентификация:
 
-Пользователи
-GET /api/v1/users/ - Список всех пользователей (admin only)
-POST /api/v1/users/ - Создание пользователя (admin only)
-GET /api/v1/users/{username}/ - Получение пользователя (admin only)
-PATCH /api/v1/users/{username}/ - Изменение пользователя (admin only)
-DELETE /api/v1/users/{username}/ - Удаление пользователя (admin only)
-GET /api/v1/users/me/ - Получение своего профиля
-PATCH /api/v1/users/me/ - Изменение своего профиля
+POST /api/v1/auth/signup/ - Регистрация нового пользователя  
+POST /api/v1/auth/token/ - Получение JWT-токена  
 
-Произведения (Titles)
-GET /api/v1/titles/ - Список произведений
-POST /api/v1/titles/ - Создание произведения (admin only)
-GET /api/v1/titles/{titles_id}/ - Получение произведения
-PATCH /api/v1/titles/{titles_id}/ - Изменение произведения (admin only)
-DELETE /api/v1/titles/{titles_id}/ - Удаление произведения (admin only)
+### Пользователи:
 
-Категории (Categories)
-GET /api/v1/categories/ - Список категорий
-POST /api/v1/categories/ - Создание категории (admin only)
+GET /api/v1/users/ - Список всех пользователей (admin only)  
+POST /api/v1/users/ - Создание пользователя (admin only)  
+GET /api/v1/users/{username}/ - Получение пользователя (admin only)  
+PATCH /api/v1/users/{username}/ - Изменение пользователя (admin only)  
+DELETE /api/v1/users/{username}/ - Удаление пользователя (admin only)  
+GET /api/v1/users/me/ - Получение своего профиля  
+PATCH /api/v1/users/me/ - Изменение своего профиля  
+
+### Произведения (Titles):
+
+GET /api/v1/titles/ - Список произведений  
+POST /api/v1/titles/ - Создание произведения (admin only)  
+GET /api/v1/titles/{titles_id}/ - Получение произведения  
+PATCH /api/v1/titles/{titles_id}/ - Изменение произведения (admin only)  
+DELETE /api/v1/titles/{titles_id}/ - Удаление произведения (admin only)  
+
+### Категории (Categories):
+
+GET /api/v1/categories/ - Список категорий  
+POST /api/v1/categories/ - Создание категории (admin only)  
 DELETE /api/v1/categories/{slug}/ - Удаление категории (admin only)
 
-Жанры (Genres)
-GET /api/v1/genres/ - Список жанров
-POST /api/v1/genres/ - Создание жанра (admin only)
-DELETE /api/v1/genres/{slug}/ - Удаление жанра (admin only)
+### Жанры (Genres):
 
-Отзывы (Reviews)
-GET /api/v1/titles/{title_id}/reviews/ - Список отзывов
-POST /api/v1/titles/{title_id}/reviews/ - Создание отзыва
-GET /api/v1/titles/{title_id}/reviews/{review_id}/ - Получение отзыва
-PATCH /api/v1/titles/{title_id}/reviews/{review_id}/ - Изменение отзыва
-DELETE /api/v1/titles/{title_id}/reviews/{review_id}/ - Удаление отзыва
+GET /api/v1/genres/ - Список жанров  
+POST /api/v1/genres/ - Создание жанра (admin only)  
+DELETE /api/v1/genres/{slug}/ - Удаление жанра (admin only)  
 
-Комментарии (Comments)
-GET /api/v1/titles/{title_id}/reviews/{review_id}/comments/ - Список комментариев
-POST /api/v1/titles/{title_id}/reviews/{review_id}/comments/ - Создание комментария
-GET /api/v1/titles/{title_id}/reviews/{review_id}/comments/{comment_id}/ - Получение комментария
-PATCH /api/v1/titles/{title_id}/reviews/{review_id}/comments/{comment_id}/ - Изменение комментария
-DELETE /api/v1/titles/{title_id}/reviews/{review_id}/comments/{comment_id}/ - Удаление комментария
+### Отзывы (Reviews):
 
-Пользовательские роли и права:
-Аноним: только чтение
-Аутентифицированный пользователь (user): чтение, создание отзывов/комментариев, изменение/удаление своих отзывов/комментариев
-Модератор (moderator): все права user + возможность изменять/удалять любые отзывы и комментарии
-Администратор (admin): полные права на управление контентом и пользователями
+GET /api/v1/titles/{title_id}/reviews/ - Список отзывов  
+POST /api/v1/titles/{title_id}/reviews/ - Создание отзыва  
+GET /api/v1/titles/{title_id}/reviews/{review_id}/ - Получение отзыва  
+PATCH /api/v1/titles/{title_id}/reviews/{review_id}/ - Изменение отзыва  
+DELETE /api/v1/titles/{title_id}/reviews/{review_id}/ - Удаление отзыва  
 
-Тестирование
-Запуск тестов:
+### Комментарии (Comments):
+
+GET /api/v1/titles/{title_id}/reviews/{review_id}/comments/ - Список комментариев  
+POST /api/v1/titles/{title_id}/reviews/{review_id}/comments/ - Создание комментария  
+GET /api/v1/titles/{title_id}/reviews/{review_id}/comments/{comment_id}/ - Получение комментария  
+PATCH /api/v1/titles/{title_id}/reviews/{review_id}/comments/{comment_id}/ - Изменение комментария  
+DELETE /api/v1/titles/{title_id}/reviews/{review_id}/comments/{comment_id}/ - Удаление комментария  
+
+### Пользовательские роли и права:
+
+Аноним: только чтение  
+Аутентифицированный пользователь (user): чтение, создание отзывов/комментариев, изменение/удаление своих отзывов/комментариев  
+Модератор (moderator): все права user + возможность изменять/удалять любые отзывы и комментарии  
+Администратор (admin): полные права на управление контентом и пользователями  
+
+## Тестирование
+### Запуск тестов:
 ```
 pytest -v
 ```
 
-Технологический стек:
-Python 3.12.7
-Django 5.1.1
-Django REST Framework 5.4.0
-Simple JWT (JWT-аутентификация)
-SQLite
-Swagger/ReDoc (документация API)
+## Технологический стек:
+- Python 3.12.7
+- Django 5.1.1
+- Django REST Framework 5.4.0
+- Simple JWT (JWT-аутентификация)
+- SQLite
+- Swagger/ReDoc (документация API)
 
-Авторы:
-Проект разработан [Павел Куличенко, Евгений Актемиров]
-GitHub: https://github.com/Inswty
+## Авторы:
+Проект разработан [Павел Куличенко](https://github.com/Inswty), [Евгений Актемиров](https://github.com/akteevg)  
+GitHub: [https://github.com/Inswty](https://github.com/Inswty/api-yamdb.git)

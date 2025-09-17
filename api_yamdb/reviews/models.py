@@ -154,7 +154,7 @@ class Review(AuthorTextPubdateAbstract):
     )
     score = models.PositiveSmallIntegerField(
         'оценка',
-        validators=[
+        validators=(
             MinValueValidator(
                 MIN_SCORE,
                 message=f'Оценка не может быть меньше {MIN_SCORE}.'
@@ -163,7 +163,7 @@ class Review(AuthorTextPubdateAbstract):
                 MAX_SCORE,
                 message=f'Оценка не может быть больше {MAX_SCORE}.'
             )
-        ]
+        )
     )
 
     class Meta(AuthorTextPubdateAbstract.Meta):
